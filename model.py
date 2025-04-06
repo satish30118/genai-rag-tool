@@ -18,7 +18,7 @@ class Recommender:
         self.vectorizer = TfidfVectorizer()
         self.tfidf_matrix = self.vectorizer.fit_transform(self.df['combined'])
 
-    def recommend(self, user_input, top_n=3):
+    def recommend(self, user_input, top_n=6):
         user_vec = self.vectorizer.transform([user_input])
         cosine_sim = cosine_similarity(user_vec, self.tfidf_matrix).flatten()
         top_indices = cosine_sim.argsort()[::-1][:top_n]
