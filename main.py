@@ -1,32 +1,38 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from model import Recommender
+import os
 
 app = FastAPI()
 
-# ✅ Enable CORS for frontend access (you can restrict origins in production)
+# ✅ Serve static frontend files from the 'frontend' folder
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# ✅ CORS for frontend communication
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 👈 Replace "*" with actual domain in production
+    allow_origins=["*"],  # In prod, replace with frontend domain
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# ✅ Load recommender model with dataset
+# ✅ Load model
 recommender = Recommender("SHL_dataset.csv")
 
-# ✅ Request schema for POST request body
+# ✅ Schema
 class RequestModel(BaseModel):
     text: str
 
-# ✅ Root endpoint to test if API is working
+# ✅ API root
 @app.get("/")
 def read_root():
-    return {"message": "API is working"}
+    return FileResponse("static/index.html")  # 👈 serves the index.html page
 
-# ✅ Recommendation endpoint
+# ✅ POST endpoint for recommendation
 @app.post("/recommend")
 def get_recommendation(request: RequestModel):
     results = recommender.recommend(request.text)
