@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Assessment Recommender</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: #e5e7eb;
+      /* soft light gray */
+      color: #333;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    header {
+      background-color: #2f855a;
+      /* deep green */
+      color: white;
+      width: 100%;
+      padding: 1.5rem 0;
+      text-align: center;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    header h1 {
+      font-size: 1.8rem;
+    }
+
+    #inputArea {
+      width: 100%;
+      max-width: 700px;
+      background-color: #ffffff;
+      border-radius: 12px;
+      padding: 2rem;
+      margin-top: 2rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    textarea {
+      width: 100%;
+      padding: 1rem;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      resize: vertical;
+      background: #f9fafb;
+    }
+
+    button {
+      margin-top: 15px;
+      padding: 0.8rem 1.5rem;
+      background-color: #38a169;
+      /* green */
+      color: white;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #2f855a;
+    }
+
+    #loader {
+      display: none;
+      margin: 1rem auto 0;
+      text-align: center;
+    }
+
+    .spinner {
+      border: 4px solid #e2e8f0;
+      border-top: 4px solid #38a169;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    h3 {
+      color: #2f855a;
+      margin-top: 2.5rem;
+    }
+
+    ul {
+      margin-top: 1rem;
+      list-style-type: none;
+      padding: 0;
+      max-width: 700px;
+      width: 100%;
+    }
+
+    li {
+      background: white;
+      padding: 1rem 1.5rem;
+      border-left: 5px solid #38a169;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    }
+
+    .error {
+      color: red;
+      margin-top: 10px;
+      font-size: 15px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <h1>🧠 Assessment Recommendation System</h1>
+  </header>
+
+  <div id="inputArea">
+    <textarea id="userInput" placeholder="Enter job role or description here..."></textarea>
+    <button onclick="getRecommendations()">Get Recommendations</button>
+    <div id="loader">
+      <div class="spinner"></div>
+    </div>
+    <div id="error" class="error"></div>
+  </div>
+
+  <h3>📋 Results:</h3>
+  <ul id="resultList"></ul>
+
+  <script>
+    async function getRecommendations() {
+      const input = document.getElementById("userInput").value.trim();
+      const loader = document.getElementById("loader");
+      const errorDiv = document.getElementById("error");
+      const list = document.getElementById("resultList");
+
+      list.innerHTML = "";
+      errorDiv.textContent = "";
+
+      if (!input) {
+        errorDiv.textContent = "Please enter some job description text.";
+        return;
+      }
+
+      loader.style.display = "block";
+
+      try {
+        const res = await fetch("http://localhost:8000/recommend", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: input })
+        });
+
+        if (!res.ok) throw new Error("Server Error");
+
+        const data = await res.json();
+
+        if (data.recommendations.length === 0) {
+          list.innerHTML = "<li>No recommendations found.</li>";
+        } else {
+          data.recommendations.forEach(item => {
+            const li = document.createElement("li");
+            li.innerHTML = `
+              <strong>Test:</strong> ${item.Test} <br>
+              <strong>Time (min):</strong> ${item["time(min)"]} <br>
+              <strong>Test Type:</strong> ${item["Test Type"]} <br>
+              <strong>Remote Testing:</strong> ${item["Remote Testing"]} <br>
+              <strong>Adaptive/IRT Support:</strong> ${item["Adaptive/IRT Support"]}
+            `;
+            list.appendChild(li);
+          });
+        }
+      } catch (err) {
+        errorDiv.textContent = "Failed to fetch recommendations. Please try again.";
+        console.error(err);
+      } finally {
+        loader.style.display = "none";
+      }
+    }
+  </script>
+
+</body>
+
+</html>
