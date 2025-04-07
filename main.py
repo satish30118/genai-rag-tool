@@ -37,3 +37,9 @@ def read_root():
 def get_recommendation(request: RequestModel):
     results = recommender.recommend(request.text)
     return {"recommendations": results}
+
+# ✅ GET endpoint for recommendation using a query parameter
+@app.get("/recommend/query")
+def get_recommendation_query(text: str):
+    results = recommender.recommend(text)
+    return {"recommendations": results}
